@@ -42,7 +42,14 @@ service.defaults.adapter = function (config) {
 // respone拦截器
 service.interceptors.response.use(
   response => {
-    //Vue.$vux.loading.hide()
+	if(response.data.code==400){
+		uni.hideLoading()
+		uni.showToast({
+			title:'免费查询每小时仅限100次',
+			icon:'none'
+		})
+		return Promise.reject(response.data);
+	}
     return Promise.resolve(response.data)
   },
   error => {
