@@ -151,7 +151,7 @@ export default {
 		},
 		async getfund(code) {
 			let url = 'https://fund.eastmoney.com/pingzhongdata/' + code + '.js?v=20160518155842';
-			let url2 = 'http://fundgz.1234567.com.cn/js/' + code + '.js?rt=1589463125600';
+			let url2 = 'https://fundgz.1234567.com.cn/js/' + code + '.js?rt=1589463125600';
 			let res = await axios(url);
 			let res2 = await axios(url2);
 			let text = res.data;
@@ -186,7 +186,7 @@ export default {
 			return result;
 		},
 		async pregetfund(code) {
-			let url2 = 'http://fundgz.1234567.com.cn/js/' + code + '.js?rt=1589463125600';
+			let url2 = 'https://fundgz.1234567.com.cn/js/' + code + '.js?rt=1589463125600';
 			let res2 = await axios(url2);
 			let one = JSON.parse(res2.data.replace(/jsonpgz\((.*)\);/g, (ori, a) => a));
 			let { dwjz, fundcode, gsz, gztime, jzrq, name } = one;
