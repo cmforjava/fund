@@ -26,6 +26,11 @@ export default {
 		}
 	},
 	methods: {
+		goto(params){
+			uni.navigateTo({
+				url:params
+			})
+		},
 		post(url,params={}){
 			return  request({
 			    url:baseurl + url,

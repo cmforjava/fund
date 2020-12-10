@@ -4,13 +4,13 @@
 			<div class="mrow mmw">
 				<input placeholder="基金代码 多个空格隔开" v-model="codes" />
 				<button size="mini" @click="addfunds()">添加</button>
-				<button size="mini" @click="goto('/pages/index/indexold')">实时(有限)</button>
+				<button size="mini" @click="goto('/pages/index/index')">延时(无限)</button>
 			</div>
 			<div class="mrow mmw">
 				<input type="number" class="mwe3" v-model="x" />
 				日
 				<button size="mini" @click="update">更新</button>
-				<button size="mini" @click="filter = !filter">过滤</button>
+				<button size="mini" @click="filter=!filter">过滤</button>
 			</div>
 			<div class="mmw">
 				<slider @change="change" :value="x" :min="1" :max="60" show-value/>
@@ -39,8 +39,7 @@
 </template>
 
 <script>
-import axios from 'axios';
-import moment from 'moment';
+import axios from 'axios'
 import storage from '@/utils/storage.js';
 export default {
 	data() {
@@ -57,47 +56,41 @@ export default {
 	computed: {
 		list() {
 			let { codelist, newlist, filter, percent, minworth, maxworth, x, sort } = this;
-			let result = newlist.map(one => {
+			let result =  newlist.map(one => {
 				return { ...storage.get(one.code), ...one };
-			});
-			if (filter) {
-				result = result.filter(item => {
-					return percent(item, maxworth(item, x)) > 0 || percent(item, minworth(item, x)) < 0;
-				});
+			})
+			if(filter){
+				result =  result.filter(item=>{
+				return percent(item, maxworth(item, x)) > 0 || percent(item, minworth(item, x)) < 0
+				})
 			}
-			if (sort == 1) {
-				result = result.sort((a, b) => percent(a, minworth(a, x)) - percent(b, minworth(b, x)));
+			if(sort==1){
+				result = result.sort((a,b)=>percent(a, minworth(a, x))-percent(b, minworth(b, x)))
 			}
-			if (sort == 2) {
-				result = result.sort((a, b) => percent(b, maxworth(b, x)) - percent(a, maxworth(a, x)));
+			if(sort==2){
+				result = result.sort((a,b)=>percent(b, maxworth(b, x))-percent(a, maxworth(a, x)))
 			}
-			if (sort == 3) {
-				result = result.sort((a, b) => percent(a, a.netWorth) - percent(b, b.netWorth));
+			if(sort==3){
+				result = result.sort((a,b)=>percent(a, a.netWorth)-percent(b, b.netWorth))
 			}
-			if (sort == 4) {
-				result = result.sort((a, b) => percent(b, b.netWorth) - percent(a, a.netWorth));
+			if(sort==4){
+				result = result.sort((a,b)=>percent(b, b.netWorth)-percent(a, a.netWorth))
 			}
-			return result;
+			return result
 		}
 	},
 	methods: {
 		change({detail:{value}}){
 			this.x = value
 		},
-		percent(item, base = item.netWorth) {
+		percent(item, base=item.netWorth) {
 			let { expectWorth } = this;
 			return Math.round(((item.expectWorth - base) / base) * 10000) / 100;
 		},
 		update() {
-			let { codelist } = this;
-			uni.showLoading();
-			Promise.all(
-				codelist.map(async one => {
-					return await this.pregetfund(one);
-				})
-			).then(res => {
-				uni.hideLoading();
-				this.newlist = res;
+			let { codelist, get } = this;
+			get('/fund', { code: codelist.join(',') }).then(res => {
+				this.newlist = res.data;
 			});
 		},
 		minworth(item, n) {
@@ -117,8 +110,8 @@ export default {
 			if (aim) {
 				codes = aim;
 			}
-			if (!codes) {
-				return;
+			if(!codes){
+				return
 			}
 			uni.showLoading();
 			let arr = codes.split(' ');
@@ -128,9 +121,7 @@ export default {
 				})
 			).then(res => {
 				uni.hideLoading();
-				// this.codelist = this.templist;
-				this.newlist = res;
-				// this.update()
+				this.codelist = this.templist;
 			});
 		},
 		async addfund(code) {
@@ -144,67 +135,19 @@ export default {
 			} else {
 				templist.push(code);
 			}
-			let res = await this.getfund(code);
-			storage.set(code, res);
+			let res = await get('/fund/detail', { code, startDate: '2020-01-01' });
+			storage.set(code, res.data);
 			storage.set('codelist', templist);
 			return res;
-		},
-		async getfund(code) {
-			let url = 'https://fund.eastmoney.com/pingzhongdata/' + code + '.js?v=20160518155842';
-			let url2 = 'http://fundgz.1234567.com.cn/js/' + code + '.js?rt=1589463125600';
-			let res = await axios(url);
-			let res2 = await axios(url2);
-			let text = res.data;
-			let preval =
-				'{' +
-				text
-					.substring(51, text.length - 1)
-					.replace(/\/\*[^*]*\*\//g, '')
-					.replace(/=/g, ':')
-					.replace(/var/g, '')
-					.replace(/;/g, ',') +
-				'}';
-			let eres = {};
-			eval('eres=' + preval);
-			let { Data_netWorthTrend, fund_minsg, fS_name, fund_Rate, fS_code, fund_sourceRate } = eres;
-			let one = JSON.parse(res2.data.replace(/jsonpgz\((.*)\);/g, (ori, a) => a));
-			let { dwjz, fundcode, gsz, gztime, jzrq, name } = one;
-			let result = {
-				// buyMin:fund_minsg,
-				// buyRate:fund_Rate,
-				// buySourceRate:fund_sourceRate,
-				netWorthData: Data_netWorthTrend.map(one => {
-					return [moment(one.x).format('YYYY-MM-DD'), one.y, one.equityReturn, one.unitMoney];
-				}),
-				netWorth: dwjz,
-				name: name,
-				code: fundcode,
-				expectWorth: gsz,
-				expectWorthDate: gztime,
-				netWorthDate: jzrq
-			};
-			return result;
-		},
-		async pregetfund(code) {
-			let url2 = 'http://fundgz.1234567.com.cn/js/' + code + '.js?rt=1589463125600';
-			let res2 = await axios(url2);
-			let one = JSON.parse(res2.data.replace(/jsonpgz\((.*)\);/g, (ori, a) => a));
-			let { dwjz, fundcode, gsz, gztime, jzrq, name } = one;
-			let result = {
-				name: name,
-				code: fundcode,
-				expectWorth: gsz,
-				expectWorthDate: gztime,
-				netWorthDate: jzrq
-			};
-			return result;
 		},
 		init() {
 			let { get, storage } = this;
 			this.codelist = storage.get('codelist', []);
-			if (this.codelist.length) {
-				this.update();
-			}
+			// this.templist = storage.get('codelist', []);
+			// if(this.codelist.length){
+			// this.addfunds(this.codelist.join(' '));
+			// }
+			this.update();
 		}
 	},
 	onLoad() {

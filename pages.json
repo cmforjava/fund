@@ -5,6 +5,12 @@
 			"style": {
 				"navigationBarTitleText": "基金参数"
 			}
+		},
+		{
+			"path": "pages/index/indexold",
+			"style": {
+				"navigationBarTitleText": "基金参数(实时,有限)"
+			}
 		}
 	],
 	"globalStyle": {
