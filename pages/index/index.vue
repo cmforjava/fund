@@ -39,7 +39,7 @@
 </template>
 
 <script>
-import axios from 'axios';
+import axios from '@/utils/request.js';
 import moment from 'moment';
 import storage from '@/utils/storage.js';
 export default {
