@@ -7,9 +7,9 @@
 			}
 		},
 		{
-			"path": "pages/index/indexold",
+			"path": "pages/index/indexnew",
 			"style": {
-				"navigationBarTitleText": "基金参数(实时,有限)"
+				"navigationBarTitleText": "基金参数(延时,无限)"
 			}
 		}
 	],
