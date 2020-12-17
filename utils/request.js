@@ -3,7 +3,7 @@ import qs from "qs";
 // 创建axios实例
 const service = axios.create({
   baseURL: '', // api的base_url
-  timeout: 50000 // 请求超时时间
+  timeout: 10000 // 请求超时时间
 });
 
 service.defaults.adapter = function (config) {
@@ -42,6 +42,14 @@ service.defaults.adapter = function (config) {
 // respone拦截器
 service.interceptors.response.use(
   response => {
+	  if(!response.data){
+		  uni.hideLoading()
+		  uni.showToast({
+		  	title:'接口异常',
+		  	icon:'none'
+		  })
+		  return Promise.reject(response.data)
+	  }
 	if(response.data.code==400){
 		uni.hideLoading()
 		uni.showToast({
@@ -50,9 +58,11 @@ service.interceptors.response.use(
 		})
 		return Promise.reject(response.data);
 	}
+	uni.hideLoading()
     return Promise.resolve(response.data)
   },
   error => {
+	  uni.hideLoading()
     return Promise.reject(error.response);
   }
 );

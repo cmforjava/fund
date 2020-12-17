@@ -3,13 +3,13 @@
 		{
 			"path": "pages/index/index",
 			"style": {
-				"navigationBarTitleText": "基金参数"
+				"navigationBarTitleText": "基金参数(延时,无限)"
 			}
 		},
 		{
-			"path": "pages/index/indexnew",
+			"path": "pages/index/indexold",
 			"style": {
-				"navigationBarTitleText": "基金参数(延时,无限)"
+				"navigationBarTitleText": "基金参数"
 			}
 		}
 	],

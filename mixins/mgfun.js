@@ -25,7 +25,15 @@ export default {
 			return storage
 		}
 	},
+	filters:{
+		m(x){
+			return Math.round(x*10000)/10000
+		}
+	},
 	methods: {
+		mround(x){
+			return Math.round(x*1000000)/1000000
+		},
 		goto(params){
 			uni.navigateTo({
 				url:params
