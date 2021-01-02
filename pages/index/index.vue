@@ -420,7 +420,7 @@
 					rest,
 					t0
 				} = this;
-				this.show = storage.get('show')
+				this.show = storage.get('show',true)
 				this.filter = storage.get('filter')
 				this.sort = storage.get('sort') || 0
 				this.x = storage.get('x') || this.x
