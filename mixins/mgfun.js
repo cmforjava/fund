@@ -63,7 +63,7 @@ export default {
 
 	onShow() {},
 	onLoad(options){
-		window.that = this
+		// window.that = this
 	}
 
 }

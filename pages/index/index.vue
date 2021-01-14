@@ -211,10 +211,10 @@ export default {
 			chartData.title = item.name
 			chartData.max = maxworth(item, n)
 			chartData.min = minworth(item, n)
-			let categories = worthdata.slice(0, n).map(one => one[0])
+			let categories = worthdata.slice(0, n).map(one => one[0]).reverse()
 			categories.push('估值')
 			chartData.categories = categories
-			let data = worthdata.slice(0, n).map(one => one[1])
+			let data = worthdata.slice(0, n).map(one => one[1]).reverse()
 			data.push(item.expectWorth)
 			chartData.series= [{name: '净值', data: data, color: '#5555ff'}]
 			this.$refs.popup.open()
