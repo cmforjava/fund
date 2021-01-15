@@ -68,7 +68,7 @@
 						</div>
 					</div>
 					<template v-slot:right>
-						<view @click="delone(item.code)" class="mbo mc mcw mwe6">删除</view>
+						<view @click="delone(item.code)" class="mbo mc mcw mwe6" style="height: 100%">删除</view>
 					</template>
 				</uni-swipe-action-item>
 			</uni-swipe-action>
@@ -355,6 +355,7 @@ export default {
 			try {
 				res = await this.getfund(code);
 			} catch (e) {
+				console.log(e)
 				return Promise.reject(code);
 			}
 			if (templist.includes(code)) {
@@ -371,73 +372,92 @@ export default {
 			storage.set('codelist', templist);
 			return res;
 		},
-		async getfund(code) {
-			let url = 'https://fund.eastmoney.com/pingzhongdata/' + code + '.js?v=' + Date.now();
-			let url2 = 'https://fundgz.1234567.com.cn/js/' + code + '.js?rt=' + Date.now();
-			let res = await axios(url);
-			let res2 = await axios(url2);
-			let text = res;
-			let preval =
-				'{' +
-				text
-					.substring(51, text.length - 1)
-					.replace(/\/\*[^*]*\*\//g, '')
-					.replace(/=/g, ':')
-					.replace(/var/g, '')
-					.replace(/;/g, ',') +
-				'}';
-			let eres = {};
-			eval('eres=' + preval);
-			let { Data_netWorthTrend, fund_minsg, fS_name, fund_Rate, fS_code, fund_sourceRate, Data_ACWorthTrend } = eres;
-			let one = JSON.parse(res2.replace(/jsonpgz\((.*)\);/g, (ori, a) => a));
-			let { dwjz, fundcode, gsz, gztime, jzrq, name } = one;
-			let temp = 1;
-			let atemp = 0;
-			let netWorth = Data_netWorthTrend[Data_netWorthTrend.length - 1].y;
-			let netWorthData = Data_netWorthTrend.map(one => {
-				if (one.unitMoney.indexOf('拆分') != -1) {
-					temp *= one.unitMoney.replace(/拆分：每份基金份额折算(\d*\.?\d*)份/, (a, b) => b);
-				}
-				if (one.unitMoney.indexOf('分红') != -1) {
-					atemp -= -one.unitMoney.replace(/分红：每份派现金(\d*\.?\d*)元/, (a, b) => b);
-				}
-				return [moment(one.x).format('YYYY-MM-DD'), one.y * temp + atemp, one.equityReturn, one.unitMoney];
-			});
-			let newWorth = netWorthData[netWorthData.length - 1][1];
-			netWorthData.map(one => {
-				one[1] = (one[1] * netWorth) / newWorth;
-			});
-			let result = {
-				// buyMin:fund_minsg,
-				// buyRate:fund_Rate,
-				// buySourceRate:fund_sourceRate,
-				netWorthData,
-				netWorth: dwjz,
-				name: name,
-				code: fundcode,
-				expectWorth: gsz,
-				expectWorthDate: gztime,
-				netWorthDate: jzrq
-			};
-			return result;
+		async getfund(code){
+			let res =  await uniCloud.callFunction({
+					name: 'getbycode',
+					data: {
+						code
+					}
+				})
+				return res.result
 		},
-		async pregetfund(code) {
-			let url2 = 'https://fundgz.1234567.com.cn/js/' + code + '.js?rt=' + Date.now();
-			let res2 = await axios(url2);
-			try {
-				let one = JSON.parse(res2.replace(/jsonpgz\((.*)\);/g, (ori, a) => a));
-				let { dwjz, fundcode, gsz, gztime, jzrq, name } = one;
-				let result = {
-					name: name,
-					code: fundcode,
-					expectWorth: gsz,
-					expectWorthDate: gztime,
-					netWorthDate: jzrq,
-					netWorth: dwjz
-				};
-				return result;
-			} catch (e) {}
+		async pregetfund(code){
+			let res =  await uniCloud.callFunction({
+					name: 'getprebycode',
+					data: {
+						code
+					}
+				})
+				return res.result
 		},
+		
+		// async getfund(code) {
+		// 	let url = 'https://fund.eastmoney.com/pingzhongdata/' + code + '.js?v=' + Date.now();
+		// 	let url2 = 'https://fundgz.1234567.com.cn/js/' + code + '.js?rt=' + Date.now();
+		// 	let res = await axios(url);
+		// 	let res2 = await axios(url2);
+		// 	let text = res;
+		// 	let preval =
+		// 		'{' +
+		// 		text
+		// 			.substring(51, text.length - 1)
+		// 			.replace(/\/\*[^*]*\*\//g, '')
+		// 			.replace(/=/g, ':')
+		// 			.replace(/var/g, '')
+		// 			.replace(/;/g, ',') +
+		// 		'}';
+		// 	let eres = {};
+		// 	eval('eres=' + preval);
+		// 	let { Data_netWorthTrend, fund_minsg, fS_name, fund_Rate, fS_code, fund_sourceRate, Data_ACWorthTrend } = eres;
+		// 	let one = JSON.parse(res2.replace(/jsonpgz\((.*)\);/g, (ori, a) => a));
+		// 	let { dwjz, fundcode, gsz, gztime, jzrq, name } = one;
+		// 	let temp = 1;
+		// 	let atemp = 0;
+		// 	let netWorth = Data_netWorthTrend[Data_netWorthTrend.length - 1].y;
+		// 	let netWorthData = Data_netWorthTrend.map(one => {
+		// 		if (one.unitMoney.indexOf('拆分') != -1) {
+		// 			temp *= one.unitMoney.replace(/拆分：每份基金份额折算(\d*\.?\d*)份/, (a, b) => b);
+		// 		}
+		// 		if (one.unitMoney.indexOf('分红') != -1) {
+		// 			atemp -= -one.unitMoney.replace(/分红：每份派现金(\d*\.?\d*)元/, (a, b) => b);
+		// 		}
+		// 		return [moment(one.x).format('YYYY-MM-DD'), one.y * temp + atemp, one.equityReturn, one.unitMoney];
+		// 	});
+		// 	let newWorth = netWorthData[netWorthData.length - 1][1];
+		// 	netWorthData.map(one => {
+		// 		one[1] = (one[1] * netWorth) / newWorth;
+		// 	});
+		// 	let result = {
+		// 		// buyMin:fund_minsg,
+		// 		// buyRate:fund_Rate,
+		// 		// buySourceRate:fund_sourceRate,
+		// 		netWorthData,
+		// 		netWorth: dwjz,
+		// 		name: name,
+		// 		code: fundcode,
+		// 		expectWorth: gsz,
+		// 		expectWorthDate: gztime,
+		// 		netWorthDate: jzrq
+		// 	};
+		// 	return result;
+		// },
+		// async pregetfund(code) {
+		// 	let url2 = 'https://fundgz.1234567.com.cn/js/' + code + '.js?rt=' + Date.now();
+		// 	let res2 = await axios(url2);
+		// 	try {
+		// 		let one = JSON.parse(res2.replace(/jsonpgz\((.*)\);/g, (ori, a) => a));
+		// 		let { dwjz, fundcode, gsz, gztime, jzrq, name } = one;
+		// 		let result = {
+		// 			name: name,
+		// 			code: fundcode,
+		// 			expectWorth: gsz,
+		// 			expectWorthDate: gztime,
+		// 			netWorthDate: jzrq,
+		// 			netWorth: dwjz
+		// 		};
+		// 		return result;
+		// 	} catch (e) {}
+		// },
 		async init() {
 			let { get, update, rest, t0 } = this;
 			this.show = storage.get('show', true);
@@ -483,7 +503,7 @@ export default {
 					gridColor: '#CCCCCC',
 					dashLength: 8,
 					splitNumber: 5,
-					min: CharacterData.min,
+					min: chartData.min,
 					max: chartData.max,
 					format: val => {
 						return val;
