@@ -1,9 +1,28 @@
 const moment = require('./moment.js')
+// const db = uniCloud.database();
 exports.main = async (event, context) => {
 	let code = event.code
 	let result
-	let url = 'https://fund.eastmoney.com/pingzhongdata/' + code + '.js?v=' + (Date.now()+8*60*60*1000);
-	let url2 = 'https://fundgz.1234567.com.cn/js/' + code + '.js?rt=' + (Date.now()+8*60*60*1000);
+	let res
+	// res = await db.collection('temp').doc(code).get()
+	// if(res.affectedDocs){
+	// 	result = res.data[0]
+	// 	let flag
+	// 	let last = new Date(result.expectWorthDate)
+	// 	let lm = last.getMonth()
+	// 	let ld = last.getDate()
+	// 	let current = new Date()
+	// 	let cm = current.getMonth()
+	// 	let cd = current.getDate()
+	// 	flag = lm == cm && ld == cd
+	// 	if(flag){
+	// 		return result
+	// 	}
+	// }
+	
+	
+	let url = 'https://fund.eastmoney.com/pingzhongdata/' + code + '.js?v=' + Date.now();
+	let url2 = 'https://fundgz.1234567.com.cn/js/' + code + '.js?rt=' + Date.now();
 	res = await uniCloud.httpclient.request(url, {
 		contentType: 'json',
 		dataType: 'text'
@@ -42,19 +61,20 @@ exports.main = async (event, context) => {
 		gsz,
 		gztime,
 		jzrq,
-		name
+		name,
+		gszzl
 	} = one;
 	let temp = 1;
-	let atemp = 0;
+	let atemp = 1;
 	let netWorth = Data_netWorthTrend[Data_netWorthTrend.length - 1].y;
 	let netWorthData = Data_netWorthTrend.map(one => {
 		if (one.unitMoney.indexOf('拆分') != -1) {
 			temp *= one.unitMoney.replace(/拆分：每份基金份额折算(\d*\.?\d*)份/, (a, b) => b);
 		}
 		if (one.unitMoney.indexOf('分红') != -1) {
-			atemp -= -one.unitMoney.replace(/分红：每份派现金(\d*\.?\d*)元/, (a, b) => b);
+			atemp *= (one.y - -one.unitMoney.replace(/分红：每份派现金(\d*\.?\d*)元/, (a, b) => b))/one.y
 		}
-		return [moment(one.x+8*60*60*1000).format('YYYY-MM-DD'), one.y * temp + atemp, one.equityReturn, one.unitMoney];
+		return [moment(one.x+8*60*60*1000).format('YYYY-MM-DD'), one.y * temp * atemp, one.equityReturn, one.unitMoney];
 	});
 	let newWorth = netWorthData[netWorthData.length - 1][1];
 	netWorthData.map(one => {
@@ -64,6 +84,7 @@ exports.main = async (event, context) => {
 		// buyMin:fund_minsg,
 		// buyRate:fund_Rate,
 		// buySourceRate:fund_sourceRate,
+		expectGrowth: gszzl,
 		netWorthData,
 		netWorth: dwjz,
 		name: name,
@@ -72,6 +93,7 @@ exports.main = async (event, context) => {
 		expectWorthDate: gztime,
 		netWorthDate: jzrq
 	};
+	// await db.collection('temp').doc(code).set(result)
 	return result;
 
 
